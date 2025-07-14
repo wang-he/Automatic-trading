@@ -1,0 +1,31 @@
+import oandapyV20
+import oandapyV20.endpoints.accounts as accounts
+import oandapyV20.endpoints.orders as orders
+
+# ====== 配置 ======
+API_KEY = "7d258fdb78a4df9b1503f2886273dcca-b5ccdcaaada0c95c9ebbb221450dfd4d"
+ACCOUNT_ID = "101-001-35806547-001"
+OANDA_API_URL = "https://api-fxpractice.oanda.com"  # 模拟账户使用这个URL
+
+# 初始化 API 客户端
+client = oandapyV20.API(access_token=API_KEY, environment="practice")
+
+# ====== 获取账户余额 ======
+r = accounts.AccountDetails(ACCOUNT_ID)
+client.request(r)
+balance = r.response['account']['balance']
+print(f"账户余额：{balance} USD")
+
+# ====== 下单买入EUR/USD） ======
+order_data = {
+    "order": {
+        "instrument": "EUR_USD",   # 黄金/美元
+        "units": "1",              # 买入 1 单位
+        "type": "MARKET",          # 市价单
+        "positionFill": "DEFAULT"
+    }
+}
+
+order_request = orders.OrderCreate(ACCOUNT_ID, data=order_data)
+response = client.request(order_request)
+print("✅ 成交订单：", response)
