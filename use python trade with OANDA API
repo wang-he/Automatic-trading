@@ -3,7 +3,7 @@ import oandapyV20.endpoints.accounts as accounts
 import oandapyV20.endpoints.orders as orders
 
 # ====== 配置 ======
-API_KEY = "7d258fdb78a4df9b1503f2886273dcca-b5ccdcaaada0c95c9ebbb221450dfd4d"
+API_KEY = ""
 ACCOUNT_ID = "101-001-35806547-001"
 OANDA_API_URL = "https://api-fxpractice.oanda.com"  # 模拟账户使用这个URL
 
