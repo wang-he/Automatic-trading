@@ -1,0 +1,73 @@
+import ccxt
+import time
+import datetime
+import pandas as pd
+
+# ====== 配置部分 ======
+api_key = 'hide'
+api_secret = 'hide'
+
+symbol = 'BTC/USDT'
+amount = 0.001
+timeframe = '5m'
+rsi_period = 14
+rsi_buy = 30
+rsi_sell = 70
+
+# ====== 连接交易所 ======
+exchange = ccxt.binance({
+    'apiKey': api_key,
+    'secret': api_secret,
+    'enableRateLimit': True
+})
+
+def fetch_ohlcv():
+    data = exchange.fetch_ohlcv(symbol, timeframe=timeframe, limit=rsi_period + 1)
+    df = pd.DataFrame(data, columns=['timestamp', 'open', 'high', 'low', 'close', 'volume'])
+    return df
+
+def calculate_rsi(df):
+    delta = df['close'].diff()
+    gain = delta.clip(lower=0).rolling(rsi_period).mean()
+    loss = -delta.clip(upper=0).rolling(rsi_period).mean()
+    rs = gain / loss
+    rsi = 100 - 100 / (1 + rs)
+    return rsi.iloc[-1]
+
+def log(msg):
+    now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    print(f"[{now}] {msg}")
+
+# ====== 主循环 ======
+def run_bot():
+    while True:
+        try:
+            df = fetch_ohlcv()
+            if df.empty:
+                log("未获取到K线数据")
+                continue
+
+            rsi = calculate_rsi(df)
+            log(f"当前 RSI: {rsi:.2f}")
+
+            balance = exchange.fetch_balance()
+            usdt = balance['free'].get('USDT', 0)
+            btc = balance['free'].get('BTC', 0)
+
+            log(f"账户余额：USDT={usdt:.2f}, BTC={btc:.6f}")
+
+            if rsi < rsi_buy and usdt > 10:
+                order = exchange.create_market_buy_order(symbol, amount)
+                log(f"💰 买入成功：{order}")
+
+            elif rsi > rsi_sell and btc >= amount:
+                order = exchange.create_market_sell_order(symbol, amount)
+                log(f"🚨 卖出成功：{order}")
+
+        except Exception as e:
+            log(f"❌ 错误：{e}")
+
+        time.sleep(60)
+
+# 启动机器人
+run_bot()
